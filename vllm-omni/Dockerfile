@@ -1,9 +1,10 @@
 # vLLM-Omni Dockerfile - Build from vllm-project/vllm-omni
 # Supports Qwen3-Omni models with Thinker-Talker architecture
+# Single-stage build for simplicity
 
 ARG CUDA_VERSION=12.1.0
 ARG PYTHON_VERSION=3.10
-FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04 AS base
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
 
 ARG PYTHON_VERSION
 ARG CUDA_VERSION
@@ -13,6 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV VLLM_LOGGING_LEVEL=INFO
+ENV VLLM_NO_USAGE_STATS=1
 
 # Set CUDA environment variables for flash-attn build
 ENV CUDA_HOME=/usr/local/cuda
@@ -33,6 +35,7 @@ RUN apt-get update -y \
        libsndfile1 \
        ffmpeg \
        libgomp1 \
+       libnccl2 \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -74,42 +77,6 @@ RUN pip install --no-cache-dir \
     webrtcvad \
     numpy \
     scipy
-
-# Final stage - clean runtime image
-ARG CUDA_VERSION=12.1.0
-ARG PYTHON_VERSION=3.10
-FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu22.04 AS runtime
-
-ARG PYTHON_VERSION
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV VLLM_LOGGING_LEVEL=INFO
-ENV VLLM_NO_USAGE_STATS=1
-
-# Install runtime dependencies
-RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends --allow-change-held-packages \
-       software-properties-common \
-       git \
-       curl \
-       libsndfile1 \
-       ffmpeg \
-       libgomp1 \
-       libnccl2 \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && apt-get update -y \
-    && apt-get install -y --no-install-recommends \
-       python${PYTHON_VERSION} \
-       python${PYTHON_VERSION}-venv \
-       python3-pip \
-    && ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python \
-    && ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python3 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy installed Python packages from builder
-COPY --from=base /usr/local/lib/python${PYTHON_VERSION}/dist-packages /usr/local/lib/python${PYTHON_VERSION}/dist-packages
-COPY --from=base /usr/local/bin /usr/local/bin
-COPY --from=base /workspace/vllm-omni /workspace/vllm-omni
 
 # Set working directory
 WORKDIR /workspace/vllm-omni

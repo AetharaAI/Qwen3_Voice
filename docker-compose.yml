@@ -53,7 +53,12 @@ services:
 
   # --- VLLM-TTS SERVICE (Read-Aloud) ---
   tts-service:
-    image: vllm/vllm-openai:latest
+    build:
+      context: ./tts-service
+      dockerfile: Dockerfile
+      args:
+        - CUDA_VERSION=12.1.0
+        - PYTHON_VERSION=3.10
     container_name: tts_read_service
     restart: unless-stopped
     expose:
