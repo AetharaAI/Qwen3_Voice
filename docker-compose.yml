@@ -50,6 +50,7 @@ services:
       - voice-gateway
 
   # --- QWEN3-TTS SERVICE (Read-Aloud) ---
+  # Uses qwen-tts package, NOT standard vLLM (Qwen3-TTS has custom model type)
   tts-service:
     build:
       context: ./tts-service
@@ -63,19 +64,10 @@ services:
       - TRANSFORMERS_CACHE=/mnt/aetherpro-extra1/hf
       - HF_DATASETS_CACHE=/mnt/aetherpro-extra1/hf
       - CUDA_VISIBLE_DEVICES=1
-      - VLLM_LOGGING_LEVEL=INFO
     volumes:
       - /mnt/aetherpro-extra1/hf:/mnt/aetherpro-extra1/hf
-      - tts_model_cache:/root/.cache/vllm
-    command: >
-      python -m vllm.entrypoints.openai.api_server
-      --model Qwen/Qwen3-TTS-12Hz-0.6B-Base
-      --gpu-memory-utilization 0.10
-      --max-model-len 4096
-      --port 8001
-      --host 0.0.0.0
-      --dtype bfloat16
-      --tensor-parallel-size 1
+      - tts_model_cache:/root/.cache/qwen-tts
+    # Command is defined in Dockerfile - uses custom tts_server.py with qwen-tts package
     deploy:
       resources:
         reservations:
