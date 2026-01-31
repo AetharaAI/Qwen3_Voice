@@ -88,7 +88,7 @@ ENV VLLM_NO_USAGE_STATS=1
 
 # Install runtime dependencies
 RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends --allow-change-held-packages \
        software-properties-common \
        git \
        curl \
