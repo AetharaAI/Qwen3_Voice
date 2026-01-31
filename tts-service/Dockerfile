@@ -15,15 +15,15 @@ ENV VLLM_LOGGING_LEVEL=INFO
 ENV VLLM_NO_USAGE_STATS=1
 
 # Install system dependencies
+# Note: libnccl2 is already installed in CUDA base image
 RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends --allow-change-held-packages \
        software-properties-common \
        git \
        curl \
        libsndfile1 \
        ffmpeg \
        libgomp1 \
-       libnccl2 \
        python3-pip \
        python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
