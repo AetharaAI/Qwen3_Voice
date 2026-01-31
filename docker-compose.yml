@@ -56,8 +56,6 @@ services:
     image: vllm/vllm-openai:latest
     container_name: tts_read_service
     restart: unless-stopped
-    ports:
-      - "8005:8001"
     expose:
       - "8001"
     environment:
@@ -102,7 +100,7 @@ services:
     container_name: voice_gateway
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8003:8000"
     environment:
       - GATEWAY_PORT=8000
       - OMNI_SERVICE_URL=http://omni-service:8000

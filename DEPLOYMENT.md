@@ -214,17 +214,17 @@ curl -s http://localhost:8004/health | jq
 
 ```bash
 # List models
-curl -s http://localhost:8004/models | jq
+curl -s http://localhost:8003/models | jq
 
 # Check configuration
-curl -s http://localhost:8004/config | jq
+curl -s http://localhost:8003/config | jq
 ```
 
 ### 4. End-to-End Test
 
 ```bash
 # Test read-aloud
-curl -X POST http://localhost:8004/read \
+curl -X POST http://localhost:8003/read \
   -H "Content-Type: application/json" \
   -d '{"text": "Deployment successful"}' \
   --output test.wav
@@ -241,7 +241,7 @@ file test.wav
 nvidia-smi
 
 # Check Prometheus GPU metrics
-curl -s http://localhost:8004/metrics | grep gpu
+curl -s http://localhost:8003/metrics | grep gpu
 ```
 
 ---
@@ -305,8 +305,8 @@ nvidia-smi
 
 ```bash
 # Check port usage
+sudo lsof -i :8003
 sudo lsof -i :8004
-sudo lsof -i :8005
 
 # Change ports in docker-compose.yml
 ```
@@ -341,7 +341,7 @@ Add to your Prometheus configuration:
 scrape_configs:
   - job_name: 'voice-gateway'
     static_configs:
-      - targets: ['localhost:8004']
+      - targets: ['localhost:8003']
     scrape_interval: 15s
     metrics_path: /metrics
 ```
@@ -407,8 +407,8 @@ tar -xzf config-backup-YYYYMMDD.tar.gz
 # Start services
 docker-compose up -d
 
-# Verify health
-curl http://localhost:8004/health
+# Verify health (Gateway on port 8003)
+curl http://localhost:8003/health
 ```
 
 ---

@@ -16,7 +16,7 @@ This service replaces legacy audio stacks with a modern architecture featuring:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  Gateway (Port 8004)                                         │
+│  Gateway (Port 8003)                                         │
 │  ├── /health, /models, /config, /languages                   │
 │  ├── WebSocket /voice (streaming audio-to-audio)             │
 │  ├── POST /read (read-aloud TTS)                             │
@@ -30,9 +30,15 @@ This service replaces legacy audio stacks with a modern architecture featuring:
 │  Omni Service   │     │  TTS Service  │
 │  vLLM-Omni      │     │  vLLM         │
 │  30B AWQ-4bit   │     │  0.6B Base    │
+│  Port 8004      │     │  Internal 8001│
 │  GPU 1 (65%)    │     │  GPU 1 (10%)  │
 └─────────────────┘     └───────────────┘
 ```
+
+**Port Mapping**:
+- **8003**: Gateway API (main entry point for clients)
+- **8004**: Omni service (direct access if needed)
+- **8000-8002**: Reserved for LiteLLM/vLLM inference
 
 ## Quick Start
 
@@ -56,8 +62,8 @@ docker-compose up -d
 # Wait for model downloads (~30-60 minutes first run)
 docker-compose logs -f omni-service
 
-# Verify health
-curl http://localhost:8004/health
+# Verify health (Gateway on port 8003)
+curl http://localhost:8003/health
 ```
 
 ## API Endpoints
@@ -66,32 +72,32 @@ curl http://localhost:8004/health
 
 ```bash
 # Health check with GPU stats
-curl http://localhost:8004/health
+curl http://localhost:8003/health
 
 # List active models
-curl http://localhost:8004/models
+curl http://localhost:8003/models
 
 # View runtime configuration
-curl http://localhost:8004/config
+curl http://localhost:8003/config
 
 # Get supported languages
-curl http://localhost:8004/languages
+curl http://localhost:8003/languages
 ```
 
 ### Voice Conversation
 
 ```bash
 # WebSocket streaming (use WebSocket client)
-ws://localhost:8004/voice
+ws://localhost:8003/voice
 
 # Batch TTS generation
-curl -X POST http://localhost:8004/voice/batch \
+curl -X POST http://localhost:8003/voice/batch \
   -H "Content-Type: application/json" \
   -d '{"text": "Hello, world!"}' \
   --output speech.wav
 
 # Audio transcription
-curl -X POST http://localhost:8004/voice/transcribe \
+curl -X POST http://localhost:8003/voice/transcribe \
   -F "audio=@recording.wav" \
   -F "language=en"
 ```
@@ -100,7 +106,7 @@ curl -X POST http://localhost:8004/voice/transcribe \
 
 ```bash
 # Single read-aloud request
-curl -X POST http://localhost:8004/read \
+curl -X POST http://localhost:8003/read \
   -H "Content-Type: application/json" \
   -d '{
     "text": "The quick brown fox jumps over the lazy dog.",
@@ -111,14 +117,14 @@ curl -X POST http://localhost:8004/read \
   --output read_aloud.wav
 
 # WebSocket streaming with pause/resume
-ws://localhost:8004/read/stream
+ws://localhost:8003/read/stream
 ```
 
 ### Monitoring
 
 ```bash
 # Prometheus metrics
-curl http://localhost:8004/metrics
+curl http://localhost:8003/metrics
 ```
 
 ## WebSocket Protocols
