@@ -22,6 +22,7 @@ ENV PATH=${CUDA_HOME}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
 
 # Install system dependencies
+# Note: libnccl2 is already installed in CUDA base image
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
        software-properties-common \
@@ -35,7 +36,6 @@ RUN apt-get update -y \
        libsndfile1 \
        ffmpeg \
        libgomp1 \
-       libnccl2 \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update -y \
     && apt-get install -y --no-install-recommends \
