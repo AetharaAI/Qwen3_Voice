@@ -2,10 +2,11 @@
 # Supports Qwen3-Omni models with Thinker-Talker architecture
 
 ARG CUDA_VERSION=12.1.0
+ARG PYTHON_VERSION=3.10
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04 AS base
 
-ARG PYTHON_VERSION=3.10
-ARG CUDA_VERSION=12.1.0
+ARG PYTHON_VERSION
+ARG CUDA_VERSION
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -67,9 +68,11 @@ RUN pip install --no-cache-dir \
     scipy
 
 # Final stage - clean runtime image
+ARG CUDA_VERSION=12.1.0
+ARG PYTHON_VERSION=3.10
 FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu22.04 AS runtime
 
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV VLLM_LOGGING_LEVEL=INFO

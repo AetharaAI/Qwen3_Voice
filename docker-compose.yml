@@ -7,8 +7,8 @@ services:
       context: ./vllm-omni
       dockerfile: Dockerfile
       args:
-        CUDA_VERSION: 12.1.0
-        PYTHON_VERSION: 3.10
+        - CUDA_VERSION=12.1.0
+        - PYTHON_VERSION=3.10
     container_name: omni_voice_service
     restart: unless-stopped
     ports:
@@ -97,6 +97,8 @@ services:
     build:
       context: ./gateway
       dockerfile: Dockerfile
+      args:
+        - PYTHON_VERSION=3.11
     container_name: voice_gateway
     restart: unless-stopped
     ports:

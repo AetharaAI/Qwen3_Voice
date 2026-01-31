@@ -1,8 +1,9 @@
 # Gateway Dockerfile - FastAPI Orchestration Layer
+ARG PYTHON_VERSION=3.11
 FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION
 
 # Install system dependencies
 RUN apt-get update -y \
