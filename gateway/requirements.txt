@@ -1,0 +1,37 @@
+# FastAPI and WebSocket
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+websockets==13.1
+python-multipart==0.0.12
+
+# HTTP client
+httpx[http2]==0.27.2
+aiohttp==3.11.0
+
+# Data validation
+pydantic==2.9.2
+pydantic-settings==2.6.1
+
+# Prometheus metrics
+prometheus-client==0.21.0
+starlette-prometheus==0.10.0
+
+# Audio processing
+numpy==1.26.4
+scipy==1.14.1
+librosa==0.10.2.post1
+soundfile==0.12.1
+webrtcvad==2.0.10
+
+# GPU monitoring
+pynvml==11.5.0
+nvidia-ml-py==12.560.30
+
+# Utilities
+python-json-logger==2.0.7
+structlog==24.4.0
+tenacity==9.0.0
+orjson==3.10.11
+
+# Caching
+redis==5.2.0

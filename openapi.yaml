@@ -1,0 +1,184 @@
+openapi: 3.1.0
+info:
+  title: AetherPro Omni Voice Gateway
+  version: 1.0.0
+  description: >
+    Multimodal voice gateway providing real-time audio-to-audio interaction,
+    read-aloud TTS, transcription, and model introspection.
+
+servers:
+  - url: http://localhost:8004
+    description: External host port
+  - url: http://voice-gateway:8000
+    description: Internal Docker network
+
+paths:
+
+  /health:
+    get:
+      summary: Service health and readiness
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  model_loaded: { type: boolean }
+                  active_models:
+                    type: array
+                    items: { type: string }
+                  gpu_id: { type: string }
+                  vram_used_mb: { type: number }
+                  vram_total_mb: { type: number }
+                  uptime_seconds: { type: number }
+
+  /models:
+    get:
+      summary: List active models and capabilities
+      responses:
+        "200":
+          description: Active model inventory
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name: { type: string }
+                    role: { type: string }
+                    modalities:
+                      type: array
+                      items: { type: string }
+                    quantization: { type: string }
+                    max_context: { type: integer }
+
+  /config:
+    get:
+      summary: Runtime configuration
+      responses:
+        "200":
+          description: Active configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /languages:
+    get:
+      summary: Supported languages
+      responses:
+        "200":
+          description: Language support
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  input_languages:
+                    type: array
+                    items: { type: string }
+                  output_languages:
+                    type: array
+                    items: { type: string }
+                  auto_detect: { type: boolean }
+
+  /voice:
+    get:
+      summary: Real-time voice interaction (WebSocket)
+      description: >
+        Full-duplex audio streaming endpoint.
+      responses:
+        "101":
+          description: Switching Protocols (WebSocket)
+
+  /voice/stream:
+    get:
+      summary: Alias for /voice (WebSocket)
+      responses:
+        "101":
+          description: Switching Protocols (WebSocket)
+
+  /voice/batch:
+    post:
+      summary: Batch text-to-speech
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: { type: string }
+      responses:
+        "200":
+          description: Audio output
+          content:
+            audio/wav:
+              schema:
+                type: string
+                format: binary
+
+  /read:
+    post:
+      summary: Read-aloud TTS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: { type: string }
+      responses:
+        "200":
+          description: Audio output
+          content:
+            audio/wav:
+              schema:
+                type: string
+                format: binary
+
+  /read/stream:
+    get:
+      summary: Streamed read-aloud (WebSocket)
+      responses:
+        "101":
+          description: Switching Protocols (WebSocket)
+
+  /voice/transcribe:
+    post:
+      summary: Audio transcription
+      requestBody:
+        required: true
+        content:
+          audio/wav:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Transcription result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text: { type: string }
+                  confidence: { type: number }
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      responses:
+        "200":
+          description: Metrics output
+          content:
+            text/plain:
+              schema:
+                type: string
+

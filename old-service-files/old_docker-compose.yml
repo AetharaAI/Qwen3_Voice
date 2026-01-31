@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # --- GATEWAY ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: blackbox_gateway
+    ports:
+      - "8004:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - GPU_DEVICE=0
+      - TTS_F5_URL=http://tts-f5:8001     # ALIGNED: Internal Port
+      - TTS_STYLE_URL=http://tts-style:8002 # ALIGNED: Internal Port
+      - REDIS_SERVER=redis
+    volumes:
+      - ./backend:/app
+      - /mnt/aetherpro/models:/mnt/aetherpro/models:ro
+      # SHARED TEMP VOLUME FOR CLONING:
+      - /mnt/aetherpro/models/voice/temp_shared:/mnt/aetherpro/models/voice/temp_shared
+    depends_on:
+      - redis
+      - tts-f5
+      - tts-style
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1'] # Physical GPU 1
+              capabilities: [gpu]
+
+  # --- F5 SERVICE ---
+  tts-f5:
+    build:
+      context: ./backend/services/f5
+      dockerfile: Dockerfile
+    container_name: blackbox_f5
+    restart: always
+    expose:
+      - "8001" # Internal Port used in Dockerfile CMD
+    volumes:
+      - /mnt/aetherpro/models:/mnt/aetherpro/models:ro
+      # MUST SEE THE SAME TEMP FILES:
+      - /mnt/aetherpro/models/voice/temp_shared:/mnt/aetherpro/models/voice/temp_shared
+    environment:
+      - GPU_DEVICE=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: [gpu]
+
+  # --- STYLE SERVICE ---
+  tts-style:
+    build:
+      context: ./backend/services/style
+      dockerfile: Dockerfile
+    container_name: blackbox_style
+    restart: always
+    expose:
+      - "8002" # Internal Port used in Dockerfile CMD
+    volumes:
+      - /mnt/aetherpro/models:/mnt/aetherpro/models:ro
+      # MUST SEE THE SAME TEMP FILES:
+      - /mnt/aetherpro/models/voice/temp_shared:/mnt/aetherpro/models/voice/temp_shared
+    environment:
+      - GPU_DEVICE=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: [gpu]
+
+  redis:
+    image: redis:7-alpine
+    container_name: blackboxaudio-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: blackboxaudio-network
