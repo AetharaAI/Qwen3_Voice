@@ -1,24 +1,19 @@
 # TTS Service Dockerfile
-# Uses vLLM for Qwen3-TTS model with proper GPU support
+# Uses Qwen3-TTS model via the qwen-tts package (NOT standard vLLM)
 
 ARG CUDA_VERSION=12.1.0
-ARG PYTHON_VERSION=3.10
 FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu22.04
-
-ARG PYTHON_VERSION
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV VLLM_LOGGING_LEVEL=INFO
-ENV VLLM_NO_USAGE_STATS=1
+ENV HF_HOME=/mnt/aetherpro-extra1/hf
+ENV TRANSFORMERS_CACHE=/mnt/aetherpro-extra1/hf
 
 # Install system dependencies
-# Note: libnccl2 is already installed in CUDA base image
 RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends --allow-change-held-packages \
-       software-properties-common \
+    && apt-get install -y --no-install-recommends \
        git \
        curl \
        libsndfile1 \
@@ -31,32 +26,22 @@ RUN apt-get update -y \
 # Upgrade pip
 RUN python3 -m pip install --upgrade pip setuptools wheel
 
-# Install PyTorch with CUDA support (CPU-only during build to avoid pynvml issues)
+# Install PyTorch with CUDA support
 RUN pip install --no-cache-dir torch==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
-# Install vLLM without importing it (avoid pynvml at build time)
-RUN pip install --no-cache-dir vllm==0.6.3 --no-deps || true
-RUN pip install --no-cache-dir \
-    numpy \
-    scipy \
-    transformers \
-    accelerate \
-    soundfile \
-    librosa \
-    pydantic \
-    fastapi \
-    uvicorn \
-    httpx \
-    orjson \
-    einops \
-    sentencepiece \
-    protobuf
+# Install qwen-tts package and dependencies
+RUN pip install --no-cache-dir qwen-tts transformers accelerate soundfile
 
-# Install remaining vLLM dependencies
-RUN pip install --no-cache-dir vllm==0.6.3
+# Install FastAPI for serving
+RUN pip install --no-cache-dir fastapi uvicorn pydantic
+
+# Copy the TTS server script
+COPY tts_server.py /app/tts_server.py
+
+WORKDIR /app
 
 # Expose API port
 EXPOSE 8001
 
 # Default command
-CMD ["python", "-m", "vllm.entrypoints.openai.api_server", "--model", "Qwen/Qwen3-TTS-12Hz-0.6B-Base", "--port", "8001", "--host", "0.0.0.0", "--dtype", "float16", "--gpu-memory-utilization", "0.10", "--max-model-len", "4096"]
+CMD ["python3", "-u", "tts_server.py"]
