@@ -11,8 +11,6 @@ services:
         - PYTHON_VERSION=3.10
     container_name: omni_voice_service
     restart: unless-stopped
-    ports:
-      - "8004:8000"
     expose:
       - "8000"
     environment:
@@ -63,10 +61,21 @@ services:
     environment:
       - HF_HOME=/mnt/aetherpro-extra1/hf
       - TRANSFORMERS_CACHE=/mnt/aetherpro-extra1/hf
+      - HF_DATASETS_CACHE=/mnt/aetherpro-extra1/hf
       - CUDA_VISIBLE_DEVICES=1
+      - VLLM_LOGGING_LEVEL=INFO
     volumes:
       - /mnt/aetherpro-extra1/hf:/mnt/aetherpro-extra1/hf
-      - tts_model_cache:/root/.cache
+      - tts_model_cache:/root/.cache/vllm
+    command: >
+      python -m vllm.entrypoints.openai.api_server
+      --model Qwen/Qwen3-TTS-12Hz-0.6B-Base
+      --gpu-memory-utilization 0.10
+      --max-model-len 4096
+      --port 8001
+      --host 0.0.0.0
+      --dtype bfloat16
+      --tensor-parallel-size 1
     deploy:
       resources:
         reservations:
@@ -93,7 +102,7 @@ services:
     container_name: voice_gateway
     restart: unless-stopped
     ports:
-      - "8003:8000"
+      - "8004:8000"
     environment:
       - GATEWAY_PORT=8000
       - OMNI_SERVICE_URL=http://omni-service:8000
