@@ -14,6 +14,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV VLLM_LOGGING_LEVEL=INFO
 
+# Set CUDA environment variables for flash-attn build
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+
 # Install system dependencies
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -44,6 +49,9 @@ RUN python -m pip install --upgrade pip setuptools wheel packaging
 
 # Install PyTorch with CUDA support
 RUN pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu121
+
+# Install psutil (required by flash-attn before its own setup)
+RUN pip install --no-cache-dir psutil
 
 # Install flash-attention (required for vLLM-Omni)
 RUN pip install --no-cache-dir flash-attn==2.6.3 --no-build-isolation
